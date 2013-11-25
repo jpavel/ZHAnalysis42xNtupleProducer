@@ -1,0 +1,58 @@
+# setup in zsh 
+cmsrel CMSSW_4_2_8_patch7
+cd CMSSW_4_2_8_patch7/src
+cmsenv
+
+#MVA stuff
+cvs co -r   METPU_4_2_X_v2 JetMETCorrections/METPUSubtraction
+cd JetMETCorrections/METPUSubtraction/test/
+./setup42.sh
+cd ../../../
+scram b -j 9
+
+PAT
+
+cvs co -r B4_2_X_V00-03-05 CommonTools/ParticleFlow                         
+cvs co -r V06-04-19-05   DataFormats/PatCandidates                        
+cvs co -r V03-01-00      JetMETCorrections/Objects                        
+cvs co -r V01-05-07      PhysicsTools/IsolationAlgos                      
+cvs co -r V08-06-58      PhysicsTools/PatAlgos                            
+cvs co -r V00-03-24      PhysicsTools/SelectorUtils                       
+cvs co -r V08-02-14      PhysicsTools/UtilAlgos                           
+cvs co -r V00-03-32      RecoEgamma/ElectronIdentification                
+# tau ID
+cvs co -r V01-04-10-4XX      RecoTauTag/Configuration                         
+cvs co -r V01-04-23-4XX-00      RecoTauTag/RecoTau                               
+cvs co -r CMSSW_5_2_4    RecoTauTag/TauTagTools
+
+# PAT fix
+cvs up -r 1.52.10.4 PhysicsTools/PatAlgos/python/tools/tauTools.py
+cvs up -r 1.6 PhysicsTools/PatAlgos/plugins/PATMHTProducer.h
+
+#Egamma ID
+cvs co -r V00-00-08 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
+cat EGamma/EGammaAnalysisTools/data/download.url | sed "s?http?wget http?g" > EGamma/EGammaAnalysisTools/data/download.url.sh
+cd EGamma/EGammaAnalysisTools/data/; bash download.url.sh; cd ../../../
+
+# JetMet Corrections
+cvs co -r V04-05-08 JetMETCorrections/Type1MET
+cvs co -r b4_2_X_cvMEtCorr_13Feb2012_JEC11V2 PhysicsTools/PatUtils
+cvs co -r V02-03-00 JetMETCorrections/Algorithms
+rm -f JetMETCorrections/Algorithms/interface/L1JPTOffsetCorrector.h
+rm -f JetMETCorrections/Algorithms/src/L1JPTOffsetCorrector.cc
+addpkg JetMETCorrections/Modules
+cvs up -r 1.4 JetMETCorrections/Modules/plugins/JetCorrectorOnTheFly.cc
+cvs up -r 1.6 JetMETCorrections/Modules/interface/JetCorrectionProducer.h
+
+#jet ID
+wget --no-check-certificate https://jez.web.cern.ch/jez/CMGTools42.tgz
+tar xzvf CMGTools42.tgz
+rm -f CMGTools.tgz
+
+# functional version with features identical to 52x and 53x
+cvs co -r V-010 -d Analysis/NtupleProducer UserCode/Abdollah/ZHttAnalysis/42XNtupleProducer
+scram b -j 9
+
+#run
+cmsRun Analysis/NtupleProducer/ntupleproducer_cfg.py
+
