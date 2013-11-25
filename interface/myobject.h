@@ -31,7 +31,7 @@ public:
      int pdgId, status, mod_pdgId, mod_status, Gmod_pdgId, Gmod_status, tracksSize;
      int gen_index, decay_mode;
     //Muon
-    float dB, d0, emfraction;
+     float dB, d0, emfraction;
     float DepositR03Ecal;
     float DepositR03Hcal;
     float DepositR03TrackerOfficial;
@@ -46,7 +46,11 @@ public:
    float normalizedChi2;
    int trkLayerMeasure , intrkLayerMeasure,  intrkLayerpixel;
     float    dxy_in , dZ_in ;
-
+    
+    // 2D IP wrt primary vertex
+    float dxy_PV,dz_PV;
+    // 3D impact parameter
+    float IP3D;
 
     //Vertex Mettopology Trigger
     bool isFake, isValid;
@@ -60,6 +64,9 @@ public:
     //Electron
     float HoverE, deltaPhiSuperClusterTrackAtVtx, deltaEtaSuperClusterTrackAtVtx, sigmaIetaIeta, sigmaEtaEta;
     float ecalIso, hcalIso, caloIso, trackIso, hcalOverEcal, SIP;
+    bool passConversionVeto;
+    float rawE_SC, preshowerE_SC;
+    bool isGsfCtfScPixChargeConsistent, isGsfScPixChargeConsistent, isGsfCtfChargeConsistent;
 
     //For jet and taus
     float bDiscriminatiors_CSV,bDiscriminatiors_JP,bDiscriminatiors_TCHPT;
@@ -113,6 +120,9 @@ public:
     bool discriminationByMuonLoose2;
     bool discriminationByMuonMedium2;
     bool discriminationByMuonTight2;
+    bool discriminationByMuonLoose3;
+    bool discriminationByMuonTight3;
+
     bool byVLooseCombinedIsolationDeltaBetaCorr;
     bool byLooseCombinedIsolationDeltaBetaCorr;
     bool byMediumCombinedIsolationDeltaBetaCorr;
@@ -120,7 +130,7 @@ public:
     bool byLooseCombinedIsolationDeltaBetaCorr3Hits;
     bool byMediumCombinedIsolationDeltaBetaCorr3Hits;
     bool byTightCombinedIsolationDeltaBetaCorr3Hits;
-
+    float byRawCombinedIsolationDeltaBetaCorr3Hits;
 
 
     float byIsolationMVAraw;

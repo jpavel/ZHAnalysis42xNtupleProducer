@@ -138,7 +138,7 @@ process.myanalysis = cms.EDAnalyzer("NtupleProducer",
                                     # MC Information
                                     PileUpInfo=cms.InputTag("addPileupInfo"),
                                     genParticlesInfo=cms.InputTag("genParticles"),
-
+                                    vertexCollectionForLeptonIP=cms.InputTag("selectPrimaryVertex"),
                                                                       #Trigger and TriggerMatching
 #                                    trigger=cms.InputTag("patTrigger"),
                                     triggerEvent=cms.InputTag("patTriggerEvent"),
@@ -147,6 +147,8 @@ process.myanalysis = cms.EDAnalyzer("NtupleProducer",
                                     tauMatch_Medium=cms.string('tauTriggerMatchHLTTausMedium'),
                                     electronMatch_Loose=cms.string('electronTriggerMatchHLTElectronsLoose'),
                                     muonMatch_Loose=cms.string('muonTriggerMatchHLTMuonsLoose'),
+                                    electronMatch_Medium=cms.string('electronTriggerMatchHLTElectronsMedium'),
+                                    muonMatch_Medium=cms.string('muonTriggerMatchHLTMuonsMedium'),
                                     puJetIdFlag=cms.InputTag("puJetMva","fullId"),
                                     #rho
                                     rhoProducer = cms.InputTag('kt6PFJetsForRhoComputationVoronoi','rho')
@@ -179,11 +181,17 @@ else:
 
 #################################################   Good Primary Vertex ################################
 from PhysicsTools.SelectorUtils.pvSelector_cfi import pvSelector
-process.goodVertices = cms.EDFilter(
+process.selectPrimaryVertex = cms.EDFilter(
                                     "PrimaryVertexObjectFilter",
-                                    filterParams=pvSelector.clone(minNdof=cms.double(7.0), maxZ=cms.double(24.0)),
+                                    filterParams=pvSelector.clone(minNdof=cms.double(4.0), maxZ=cms.double(24.0)),
                                     src=cms.InputTag('offlinePrimaryVertices')
                                     )
+
+process.GoodVertexFilter = cms.EDFilter("VertexSelector",
+                                        src = cms.InputTag("offlinePrimaryVertices"),
+                                        cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.Rho <= 2"),
+                                        filter = cms.bool(True)   # otherwise it won't filter the events, just produce an empty vertex collection.
+                                          )
 
 #################################################   PAT APPLICATIONS   ##################################
 
@@ -278,6 +286,10 @@ process.patElectrons.electronIDSources = cms.PSet(
      mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
     )
 
+#change PV source for electrons and muons
+process.patElectrons.pvSrc = cms.InputTag("selectPrimaryVertex")
+process.patMuons.pvSrc = cms.InputTag("selectPrimaryVertex")
+
 # process.patElectronIDs = cms.Sequence(process.simpleEleIdSequence)
 # process.makePatElectrons = cms.Sequence(process.patElectronIDs * process.patElectronIsolation * process.patElectrons)
 # process.patElectrons.addElectronID = cms.bool(True)
@@ -336,7 +348,7 @@ process.tauTriggerMatchHLTTausMedium = cms.EDProducer("PATTriggerMatcherDRDPtLes
 process.electronTriggerMatchHLTElectronsLoose = cms.EDProducer("PATTriggerMatcherDRDPtLessByR",
                                                                src=cms.InputTag("selectedPatElectrons"),
                                                                matched=cms.InputTag("patTrigger"),
-                                                               matchedCuts=cms.string('path( "HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*" )'),
+                                                               matchedCuts=cms.string('path( "HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*" ) || path("HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v*")'),
                                                                maxDPtRel=cms.double(0.5),
                                                                maxDeltaR=cms.double(0.5),
                                                                resolveAmbiguities=cms.bool(True),
@@ -346,12 +358,32 @@ process.electronTriggerMatchHLTElectronsLoose = cms.EDProducer("PATTriggerMatche
 process.muonTriggerMatchHLTMuonsLoose = cms.EDProducer("PATTriggerMatcherDRDPtLessByR",
                                                        src=cms.InputTag("selectedPatMuons"),
                                                        matched=cms.InputTag("patTrigger"),
-                                                       matchedCuts=cms.string('path( "HLT_Mu17_Mu8_v*" ) || path( "HLT_Mu17_TkMu8_v*" )'),
+                                                       matchedCuts=cms.string('path( "HLT_Mu13_Mu8_v*" ) || path( "HLT_Mu17_Mu8_v*" ) || path("HLT_DoubleMu7_v*")'),
                                                        maxDPtRel=cms.double(0.5),
                                                        maxDeltaR=cms.double(0.5),
                                                        resolveAmbiguities=cms.bool(True),
                                                        resolveByMatchQuality=cms.bool(True)
                                                        )
+
+process.electronTriggerMatchHLTElectronsMedium = cms.EDProducer("PATTriggerMatcherDRDPtLessByR",
+                                                                src=cms.InputTag("selectedPatElectrons"),
+                                                                matched=cms.InputTag("patTrigger"),
+                                                                matchedCuts=cms.string('path( "HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_v*" ) || path("HLT_Mu17_Ele8_CaloIdL_v*")'), #2011 only
+                                                                maxDPtRel=cms.double(0.5),
+                                                                maxDeltaR=cms.double(0.5),
+                                                                resolveAmbiguities=cms.bool(True),
+                                                                resolveByMatchQuality=cms.bool(True)
+                                                                )
+
+process.muonTriggerMatchHLTMuonsMedium = cms.EDProducer("PATTriggerMatcherDRDPtLessByR",
+                                                        src=cms.InputTag("selectedPatMuons"),
+                                                        matched=cms.InputTag("patTrigger"),
+                                                        matchedCuts=cms.string('path( "HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_v*" ) || path("HLT_Mu17_Ele8_CaloIdL_v*")'), #2011 only
+                                                        maxDPtRel=cms.double(0.5),
+                                                        maxDeltaR=cms.double(0.5),
+                                                        resolveAmbiguities=cms.bool(True),
+                                                        resolveByMatchQuality=cms.bool(True)
+                                                        )
 
 
 process.pfPileUp.Enable = cms.bool(True)
@@ -388,7 +420,7 @@ process.isotaus.discriminators = cms.VPSet(
 #print process.dumpPython()
 process.p = cms.Path (
                       process.dataFilter *
-                      process.goodVertices *
+                      process.selectPrimaryVertex *
                       process.PFTau * #prescribed by TAU POG
                       process.mvaID   *
                       process.pfNoPileUpSequence *
@@ -424,7 +456,7 @@ from PhysicsTools.PatAlgos.tools.trigTools import *
 
 switchOnTrigger( process ) # This is optional and can be omitted.
 
-switchOnTriggerMatching(process, ['tauTriggerMatchHLTTausLoose','tauTriggerMatchHLTTausMedium','electronTriggerMatchHLTElectronsLoose','muonTriggerMatchHLTMuonsLoose'])
+switchOnTriggerMatching(process, ['tauTriggerMatchHLTTausLoose','tauTriggerMatchHLTTausMedium','electronTriggerMatchHLTElectronsLoose','muonTriggerMatchHLTMuonsLoose','electronTriggerMatchHLTElectronsMedium','muonTriggerMatchHLTMuonsMedium'])
 #switchOnTriggerMatching(process, ['tauTriggerMatchHLTTausLoose'])
 #switchOnTriggerMatching(process, ['tauTriggerMatchHLTTausMedium'])
 

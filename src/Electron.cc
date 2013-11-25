@@ -1,4 +1,5 @@
 #include "Analysis/NtupleProducer/interface/NtupleProducer.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     (m->PreSelectedElectrons).clear();
@@ -47,6 +48,9 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
     edm::Handle<edm::ValueMap<double> > isoPUEleMap_NoPFId;
     iEvent.getByLabel(edm::InputTag("elPFIsoValuePU04NoPFIdPFIso"), isoPUEleMap_NoPFId);
 
+    // for conversion veto selection
+   edm::Handle<reco::ConversionCollection> hConversions;
+   iEvent.getByLabel("allConversions", hConversions);
 
 
 
@@ -121,7 +125,7 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
 
     // Get primary vertex collection
     Handle<reco::VertexCollection> recoPVCollection;
-    iEvent.getByLabel(edm::InputTag("offlinePrimaryVertices"), recoPVCollection);
+    iEvent.getByLabel(vertexCollectionForLeptonIP_, recoPVCollection);
 
     //  useBeamSpot_  = pset.getParameter<bool>("useBeamSpot");
     bool useBeamSpot_ = true;
@@ -182,7 +186,9 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
 
         elo.numLostHitEle = (iElectron->gsfTrack().isNonnull() ? iElectron->gsfTrack()->numberOfLostHits() : 0.);
         elo.numValidHitEle = (iElectron->gsfTrack().isNonnull() ? iElectron->gsfTrack()->numberOfValidHits() : 0.);
-        //        elo.d0 = (iElectron->gsfTrack().isNonnull() ? iElectron->gsfTrack()->dxy(PrVx->front().position()) : 0.);
+      	elo.IP3D = iElectron->dB(pat::Electron::PV3D);
+	elo.dxy_PV = (iElectron->gsfTrack().isNonnull() ? iElectron->gsfTrack()->dxy(primVertex.position()) : 0.);
+	elo.dz_PV = (iElectron->gsfTrack().isNonnull() ? iElectron->gsfTrack()->dz(primVertex.position()) : 0.);
 
         elo.HoverE = iElectron->hadronicOverEm();
         elo.deltaPhiSuperClusterTrackAtVtx = iElectron->deltaPhiSuperClusterTrackAtVtx();
@@ -196,6 +202,9 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
         elo.ecalEnergy = iElectron->ecalEnergy();
         elo.hcalOverEcal = iElectron->hcalOverEcal();
         elo.eta_SC       = iElectron->superCluster()->eta()   ;
+	elo.rawE_SC  = iElectron->superCluster()->rawEnergy(); 
+	elo.preshowerE_SC = iElectron->superCluster()->preshowerEnergy();
+
  
 
 
@@ -249,6 +258,10 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
           for (itr_elec = gsfElectrons_.begin(); itr_elec != gsfElectrons_.end(); itr_elec++, num_debug++) {
 
               if (reco::deltaR( itr_elec->p4() , iElectron->p4()) < 0.001){
+		elo.isGsfCtfScPixChargeConsistent= itr_elec->isGsfCtfScPixChargeConsistent() ;
+		elo.isGsfScPixChargeConsistent = itr_elec->isGsfScPixChargeConsistent();
+		elo.isGsfCtfChargeConsistent = itr_elec->isGsfCtfChargeConsistent();
+
    edm::Ref<reco::GsfElectronCollection> eleRefgsf(ElectronsHandleGSF, num_debug);
         elo.Id_mvaTrg = (*mvaTrigV0_)[eleRefgsf];
         elo.Id_mvaNonTrg = (*mvaNonTrigV0_)[eleRefgsf];
@@ -314,6 +327,14 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
             TransverseImpactPointExtrapolator extrapolator(magField);
             TrajectoryStateOnSurface closestOnTransversePlaneState = extrapolator.extrapolate(track.impactPointState(), GlobalPoint(beamSpot->position().x(), beamSpot->position().y(), 0.0));
            elo.z_expo = closestOnTransversePlaneState.globalPosition().z();
+	   // conversion veto
+	    bool passconversionveto = false;
+	    if( hConversions.isValid()){
+	        // this is recommended method
+	        passconversionveto = !ConversionTools::hasMatchedConversion( dynamic_cast<reco::GsfElectron const&>(*(iElectron->originalObjectRef())), hConversions, beamSpot->position());
+	      }
+	    elo.passConversionVeto = passconversionveto;
+
 
         }
 
@@ -333,6 +354,18 @@ void NtupleProducer::DoElectronAnalysis(const edm::Event& iEvent, const edm::Eve
         }
 
 
+	const pat::TriggerObjectRef trigRef_medium(matchHelper.triggerMatchObject(ElectronsHandle, index, electronMatch_Medium_, iEvent, *triggerEvent));
+	        elo.hasTrgObject_medium = false;
+	elo.TrgObjectEta_medium = -100;
+	elo.TrgObjectPt_medium = -100;
+	        elo.TrgObjectPhi_medium = -100;
+	// finally we can fill the histograms
+	if (trigRef_medium.isAvailable()) { // check references (necessary!)
+	            elo.hasTrgObject_medium = true;
+	    elo.TrgObjectEta_medium = trigRef_medium->eta();
+	            elo.TrgObjectPt_medium = trigRef_medium->pt();
+	    elo.TrgObjectPhi_medium = trigRef_medium->phi();
+	  }
 
 
 

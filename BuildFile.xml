@@ -27,6 +27,7 @@
 <use   name="RecoEgamma/EgammaIsolationAlgos"/>
 <use   name="DataFormats/PatCandidates"/>
 <use   name="PhysicsTools/UtilAlgos"/>
+<use   name="RecoEgamma/EgammaTools" />
 <flags     CXXFLAGS="-O0 -g -DDEBUG"/>
 <use   name="PhysicsTools/PatUtils"/>
 <use   name="clhep"/>

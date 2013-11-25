@@ -21,12 +21,12 @@ cvs co -r V00-03-24      PhysicsTools/SelectorUtils
 cvs co -r V08-02-14      PhysicsTools/UtilAlgos                           
 cvs co -r V00-03-32      RecoEgamma/ElectronIdentification                
 # tau ID
-cvs co -r V01-04-10-4XX      RecoTauTag/Configuration                         
-cvs co -r V01-04-23-4XX-00      RecoTauTag/RecoTau                               
+cvs co -r V01-04-12-4XX      RecoTauTag/Configuration                         
+cvs co -r V01-04-25-4XX      RecoTauTag/RecoTau                               
 cvs co -r CMSSW_5_2_4    RecoTauTag/TauTagTools
 
 # PAT fix
-cvs up -r 1.52.10.4 PhysicsTools/PatAlgos/python/tools/tauTools.py
+cvs up -r 1.52.10.5 PhysicsTools/PatAlgos/python/tools/tauTools.py
 cvs up -r 1.6 PhysicsTools/PatAlgos/plugins/PATMHTProducer.h
 
 #Egamma ID
@@ -56,3 +56,9 @@ scram b -j 9
 #run
 cmsRun Analysis/NtupleProducer/ntupleproducer_cfg.py
 
+########### To update from version V-10#############
+cvs up -r V01-04-25-4XX RecoTauTag/RecoTau
+cvs up -r V01-04-12-4XX RecoTauTag/Configuration
+cvs up -r 1.52.10.5  PhysicsTools/PatAlgos/python/tools/tauTools.py
+scram b -j 9
+ 

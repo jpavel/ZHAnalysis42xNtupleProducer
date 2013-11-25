@@ -229,6 +229,7 @@ private:
 /*     edm::InputTag EleID_MediumTag_; */
 /*     edm::InputTag EleID_TightTag_; */
 
+    edm::InputTag vertexCollectionForLeptonIP_;
     edm::InputTag PileUpInfo_;
     edm::InputTag GenParticlesInfo_;
 
@@ -237,6 +238,8 @@ private:
     std::string tauMatch_Medium_;
     std::string electronMatch_Loose_;
     std::string muonMatch_Loose_;
+    std::string electronMatch_Medium_;
+    std::string muonMatch_Medium_;
 
     bool Include_HPSTau;
     bool Include_Muon;
@@ -259,6 +262,7 @@ private:
     std::string mu_trigger_name;
 
     double tauPtcut_;
+    bool verbose_;
 
     myevent *m; // for root tree definition
     TTree *t;

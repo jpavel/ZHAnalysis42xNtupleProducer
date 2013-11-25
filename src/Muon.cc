@@ -74,8 +74,27 @@ edm::Handle<edm::ValueMap<double> > isoAllMuMap;
 //    edm::Handle<edm::ValueMap<double> > isoPULowMuMap;
 //    iEvent.getByLabel(edm::InputTag("muPFIsoValuePULow"), isoPULowMuMap);
 
-    Handle< std::vector<reco::Vertex> > PrVx;
-    iEvent.getByLabel(edm::InputTag("offlinePrimaryVertices"), PrVx);
+    
+    // Get primary vertex collection
+    Handle<reco::VertexCollection> recoPVCollection;
+    iEvent.getByLabel(vertexCollectionForLeptonIP_, recoPVCollection);
+
+    bool useBeamSpot_ = true;
+    reco::Vertex primVertex;
+    bool pvfound = (recoPVCollection->size() != 0);
+    if (pvfound) {
+       PrimaryVertexSorter pvs;
+       vector<reco::Vertex> sortedList = pvs.sortedList(*(recoPVCollection.product()));
+       primVertex = (sortedList.front());
+    } else {
+       //creating a dummy PV
+       reco::Vertex::Point p(0, 0, 0);
+       reco::Vertex::Error e;
+       e(0, 0) = 0.0015 * 0.0015;
+       e(1, 1) = 0.0015 * 0.0015;
+       e(2, 2) = 15. * 15.;
+       primVertex = reco::Vertex(p, e, 1, 1, 1);
+    }
 
     MuonCollection::const_iterator amuon;
     int qq = 0;
@@ -99,7 +118,11 @@ edm::Handle<edm::ValueMap<double> > isoAllMuMap;
         muo.et = amuon->et();
         muo.charge = amuon->charge();
         muo.dB = amuon->dB();
-        muo.d0 = (amuon->track().isNonnull() ? amuon->track()->dxy(PrVx->front().position()) : 0.);
+        muo.d0 = (amuon->track().isNonnull() ? amuon->track()->dxy(primVertex.position()) : 0.);
+	muo.IP3D = amuon->dB(pat::Muon::PV3D);
+        muo.dxy_PV = (amuon->track().isNonnull() ? amuon->track()->dxy(primVertex.position()) : 0.);
+        muo.dz_PV = (amuon->track().isNonnull() ? amuon->track()->dz(primVertex.position()) : 0.);
+
         muo.DepositR03Ecal = DepInEcal;
         muo.DepositR03Hcal = DepInHcal;
         muo.DepositR03TrackerOfficial = DepInTracker;
@@ -122,8 +145,8 @@ edm::Handle<edm::ValueMap<double> > isoAllMuMap;
         muo.trkLayerMeasure =(amuon->track().isNonnull() ? amuon->track()->hitPattern().trackerLayersWithMeasurement():0);
         muo.intrkLayerMeasure =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->hitPattern().trackerLayersWithMeasurement():0);
         muo.intrkLayerpixel =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->hitPattern().numberOfValidPixelHits():0);
-        muo.dxy_in =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->dxy(PrVx->front().position()) : 0.);
-        muo.dZ_in =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->dz(PrVx->front().position()) : 0.);
+        muo.dxy_in =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->dxy(primVertex.position()) : 0.);
+        muo.dZ_in =(amuon->innerTrack().isNonnull() ? amuon->innerTrack()->dz(primVertex.position()) : 0.);
 
         //         edm::Ref<edm::View<reco::Muon> > themu(MuCandidates, indexbis);
         edm::Ref<pat::MuonCollection> muRef(muonsHandle, qq);
@@ -193,6 +216,21 @@ muo.isPFMuon = isPFMuon;
    muo.TrgObjectPt_loose = trigRef_loose->pt();
    muo.TrgObjectPhi_loose = trigRef_loose->phi();
  }
+
+const pat::TriggerObjectRef trigRef_medium(matchHelper.triggerMatchObject(muonsHandle, qq, muonMatch_Medium_, iEvent, *triggerEvent));
+muo.hasTrgObject_medium = false;
+        muo.TrgObjectEta_medium = -100;
+        muo.TrgObjectPt_medium = -100;
+        muo.TrgObjectPhi_medium = -100;
+        // finally we can fill the histograms
+        if (trigRef_medium.isAvailable()) { // check references (necessary!)
+
+          muo.hasTrgObject_medium = true;
+          muo.TrgObjectEta_medium = trigRef_medium->eta();
+          muo.TrgObjectPt_medium = trigRef_medium->pt();
+          muo.TrgObjectPhi_medium = trigRef_medium->phi();
+}
+
 
 
         (m->PreSelectedMuons).push_back(muo);
