@@ -1,0 +1,36 @@
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/PluginManager"/>
+<use   name="FWCore/ParameterSet"/>
+<flags   EDM_PLUGIN="1"/>
+<use   name="SimDataFormats/GeneratorProducts"/>
+<use   name="DataFormats/Common"/>
+<use   name="DataFormats/Math"/>
+<use   name="Geometry/CaloGeometry"/>
+<use   name="Geometry/Records"/>
+<use   name="DataFormats/CaloTowers"/>
+<use   name="DataFormats/EcalDetId"/>
+<use   name="DataFormats/DetId"/>
+<use   name="DataFormats/JetReco"/>
+<use   name="DataFormats/TauReco"/>
+<use   name="DataFormats/METReco"/>
+<use   name="DataFormats/BTauReco"/>
+<use   name="DataFormats/EgammaCandidates"/>
+<use   name="AnalysisDataFormats/Egamma"/>
+<use   name="DataFormats/MuonReco"/>
+<use   name="JetMETCorrections/Objects"/>
+<use   name="RecoMuon/MuonIsolation"/>
+<use   name="RecoTauTag/RecoTau"/>
+<use   name="DataFormats/Candidate"/>
+<use   name="DataFormats/HepMCCandidate"/>
+<use   name="RecoVertex/PrimaryVertexProducer"/>
+<use   name="DataFormats/L1GlobalTrigger"/>
+<use   name="RecoEgamma/EgammaIsolationAlgos"/>
+<use   name="DataFormats/PatCandidates"/>
+<use   name="PhysicsTools/UtilAlgos"/>
+<flags     CXXFLAGS="-O0 -g -DDEBUG"/>
+<use   name="PhysicsTools/PatUtils"/>
+<use   name="clhep"/>
+<use   name="root"/>
+<export>
+</export>
+<flags   EDM_PLUGIN="1"/>

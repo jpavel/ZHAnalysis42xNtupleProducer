@@ -1,0 +1,1 @@
+source PrepareJobs_removeDuplicates_filter.sh /pnfs/iihe/cms/store/user/jez/ZHttNtuples/53X/Data/DoubleElectron_Run2012D-PromptReco-v1/ FILTER3_D_Ele 10 0 0 /pnfs/iihe/cms/store/user/jez/test/newFilter3 results_filter/test

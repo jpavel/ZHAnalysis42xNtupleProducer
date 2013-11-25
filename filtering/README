@@ -1,0 +1,98 @@
+----Code for filtering ntuples----
+
+A) USAGE:
+-----------------------------------
+Code is standalone ROOT macro (for technical details please go to
+section B below), but for full functionality (lumi
+calculation), please set-up CMSSW environment and checkout lumiCalc
+package:
+
+cmsrel CMSSW_5_3_7
+cd CMSSW_5_3_7/src
+cmsenv
+cvs co  -r V04-01-09 RecoLuminosity/LumiDB
+scram b -j 9
+
+and work in CMSSW_5_3_7/src directory or any its subdirectory.
+
+The filtering works in 3 simple steps:
+1) Creation of the job:
+source PrepareJobs_removeDuplicates_filter.sh /pnfs/iihe/cms/store/user/jez/ZHttNtuples/53X/Data/DoubleElectron_Run2012D-PromptReco-v1/ FILTER3_D_Ele 10 0 0 /pnfs/iihe/cms/store/user/jez/test/newFilter3 results_filter/test
+
+Parameters are:
+	   input directory with ntuples,
+           name of task (any string), 
+           number of input files per job (recommended 1-10, depending on input sample and filtering efficiency), 
+           bool switch whether to prepare ntuples for fake rate estimation or not, 
+           bool switch whether processing 2011 samples or not (different triggers)
+           name of output directory at pnfs
+           name of local directory where summary of results will be stored
+ 
+2) Submission
+The submission script is created during the preparation phase and is
+mentiond in the printout of preparation script from previous step. Its
+name has format <Date>_<Name of task>_SubmitAll.sh. To submit jobs created by
+command from previous example one can do
+./20130113_FILTER3_D_Ele_SubmitAll.sh
+
+The submission will also try to create a grid proxy necessary to store
+output files back at /pnfs, so make sure that you have your grid
+certificate stored in default location. (~/.globus directory)
+
+3) Checking status and retrieval of output
+During calculation you can check ammount of running jobs by
+./checkJobs.sh
+
+More details about finished jobs can be obtained by executing
+additional script created during preparation phase: <Date>_<Name of
+task>_ShowStatus.sh. For the task from example above it will be
+./20130113_FILTER3_D_Ele_ShowStatus.sh
+
+It will produce condense output from all jobs in a file results.out
+and inform you about jobs that most probably needs to be
+resubmitted. The reason can be that they either failed or are not
+finished yet. The script produces a command that allows user to
+resubmit only the failed jobs: ./Resubmit_now.sh
+
+Finally the "ShowStatus" script also sums the number of events that
+have been processed by the whole task and calculates the processed
+luminosity using lumiCalc2.py tool
+
+The full output of individual subjobs can be found in <name of
+task>/job<number> directories.
+
+B) FILTERING CODE DETAILS
+---------------------------------------------
+The example of code executed on the working node is  
+
+void run_filter()
+{
+	long n_evt=2000;
+	TString
+	input="/home/jpavel/ntuples/CMS/analysis/ZHtautau/HCP_sync/";
+	bool is2011 = false;
+	bool isFR = false;
+	
+	cout << "events: " << n_evt << endl;
+	cout << "input directory: " << input << endl;
+	if(is2011) cout << "Processing 2011 sample." << endl;
+	else cout << "Processing 2012 sample." << endl;
+	
+	if(isFR) cout << "Filtering for fake rate estimation." <<
+	endl;
+	else cout << "Filtering for analysis." << endl;
+	
+	gROOT->ProcessLine(" .L filter.C++ ");
+	filter(input, n_evt, is2011, isFR);
+	return;
+}
+
+although the exact content is dynamically generated for each task to
+match the input files and different running conditions.
+
+The master filter code is in filter.C file. The filter itself is
+implemented in a function PassFilter(myevent*....) that is defined in
+selection.h.
+
+File helper.h contains several helper functions that are often
+executed by filter functions.
