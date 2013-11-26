@@ -50,7 +50,8 @@ tar xzvf CMGTools42.tgz
 rm -f CMGTools.tgz
 
 # functional version with features identical to 52x and 53x
-git clone git@github.com:jpavel/ZHAnalysis53xNtupleProducer.git Analysis/NtupleProducer
+git clone git@github.com:jpavel/ZHAnalysis42xNtupleProducer.git Analysis/NtupleProducer
+cd Analysis/NtupleProducer
 git checkout WH-01
 scram b -j 9
 
@@ -63,5 +64,6 @@ cvs up -r V01-04-12-4XX RecoTauTag/Configuration
 cvs up -r 1.52.10.5  PhysicsTools/PatAlgos/python/tools/tauTools.py
 rm -rf Analysis/NtupleProducer
 git clone git@github.com:jpavel/ZHAnalysis42xNtupleProducer.git Analysis/NtupleProducer
+cd Analysis/NtupleProducer
 git checkout WH-01 
 scram b -j 9
